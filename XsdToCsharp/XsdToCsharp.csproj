@@ -6,6 +6,20 @@
 		<UseWindowsForms>true</UseWindowsForms>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AssemblyVersion>24.1.4</AssemblyVersion>
+		<ProductVersion>24.1.4</ProductVersion>
+
+		<!-- PACKAGE -->
+		<Title>XsdToCsharp</Title>
+		<Version>24.1.4</Version>
+		<Authors>Theodoros Bebekis</Authors>
+		<Product>XsdToCsharp</Product>
+		<Company>AntyxSoft</Company>
+		<Description>A desktop application that generates C# classes from XSD files, based on the excellent XmlSchemaClassGenerator library.</Description>
+		<Copyright>Theodoros Bebekis 2024</Copyright>
+		<PackageProjectUrl>https://github.com/tbebekis/XsdToCsharp</PackageProjectUrl>
+		<PackageReadmeFile>ReadMe.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/tbebekis/XsdToCsharp</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
 	<ItemGroup>
