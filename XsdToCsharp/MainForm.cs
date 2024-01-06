@@ -193,6 +193,11 @@ namespace XsdToCsharp
             chUseArrayItemAttribute.Checked = Project.UseArrayItemAttribute;
             chMapUnionToWidestCommonType.Checked = Project.MapUnionToWidestCommonType;
             chSeparateNamespaceHierarchy.Checked = Project.SeparateNamespaceHierarchy;
+
+            // tabPlusFlags
+            chNormalNullables.Checked = Project.NormalNullables;
+            chUseBackingField.Checked = Project.UseBackingField;
+            chUseSpecified.Checked = Project.UseSpecified;
                   
             // tabFiles
             tblFiles.DeleteRows();
@@ -257,6 +262,11 @@ namespace XsdToCsharp
             Project.MapUnionToWidestCommonType = chMapUnionToWidestCommonType.Checked;
             Project.SeparateNamespaceHierarchy = chSeparateNamespaceHierarchy.Checked;
 
+            // tabPlusFlags
+            Project.NormalNullables = chNormalNullables.Checked;
+            Project.UseBackingField = chUseBackingField.Checked;
+            Project.UseSpecified = chUseSpecified.Checked;
+
             // tabFiles
             tblFiles.AcceptChanges();
             Project.Files.Clear();
@@ -297,7 +307,12 @@ namespace XsdToCsharp
                 if (F.ShowDialog() == DialogResult.OK)
                 {
                     string FilePath = F.FileName;
-                    Project = new ProjectSettings();
+                    
+                    // just to load some default settings
+                    string DefaultSettingsFilePath = "DefaultProjectSettings.json";
+                    DefaultSettingsFilePath = File.Exists(DefaultSettingsFilePath) ? DefaultSettingsFilePath : string.Empty;
+
+                    Project = new ProjectSettings(DefaultSettingsFilePath); 
                     Project.Save(FilePath);
 
                     App.Settings.LastProjectPath = FilePath;
@@ -403,6 +418,11 @@ namespace XsdToCsharp
             Gen.UseArrayItemAttribute = chUseArrayItemAttribute.Checked;
             Gen.MapUnionToWidestCommonType = chMapUnionToWidestCommonType.Checked;
             Gen.SeparateNamespaceHierarchy = chSeparateNamespaceHierarchy.Checked;
+
+            // tabPlusFlags
+            Gen.NormalNullables = chNormalNullables.Checked;
+            Gen.UseBackingField = chUseBackingField.Checked;
+            Gen.UseSpecified = chUseSpecified.Checked;
 
             Dictionary<NamespaceKey, string> NSDic = new Dictionary<NamespaceKey, string>();
 

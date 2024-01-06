@@ -46,6 +46,8 @@
             lblProjectPath = new ToolStripStatusLabel();
             Pager = new TabControl();
             tabGeneral = new TabPage();
+            edtGlobalNamespace = new TextBox();
+            label11 = new Label();
             textBox1 = new TextBox();
             cboDataAnnotationMode = new ComboBox();
             cboNamingScheme = new ComboBox();
@@ -111,8 +113,10 @@
             btnEditNs = new Button();
             Splitter = new SplitContainer();
             edtLog = new RichTextBox();
-            edtGlobalNamespace = new TextBox();
-            label11 = new Label();
+            tabPlusFlags = new TabPage();
+            chNormalNullables = new CheckBox();
+            chUseBackingField = new CheckBox();
+            chUseSpecified = new CheckBox();
             ToolBar.SuspendLayout();
             statusStrip1.SuspendLayout();
             Pager.SuspendLayout();
@@ -128,6 +132,7 @@
             Splitter.Panel1.SuspendLayout();
             Splitter.Panel2.SuspendLayout();
             Splitter.SuspendLayout();
+            tabPlusFlags.SuspendLayout();
             SuspendLayout();
             // 
             // ToolBar
@@ -249,6 +254,7 @@
             // 
             Pager.Controls.Add(tabGeneral);
             Pager.Controls.Add(tabFlags);
+            Pager.Controls.Add(tabPlusFlags);
             Pager.Controls.Add(tabFiles);
             Pager.Controls.Add(tabNamespaces);
             Pager.Dock = DockStyle.Fill;
@@ -290,6 +296,22 @@
             tabGeneral.TabIndex = 0;
             tabGeneral.Text = "General";
             tabGeneral.UseVisualStyleBackColor = true;
+            // 
+            // edtGlobalNamespace
+            // 
+            edtGlobalNamespace.Location = new Point(166, 59);
+            edtGlobalNamespace.Name = "edtGlobalNamespace";
+            edtGlobalNamespace.Size = new Size(460, 23);
+            edtGlobalNamespace.TabIndex = 22;
+            // 
+            // label11
+            // 
+            label11.AutoSize = true;
+            label11.Location = new Point(51, 63);
+            label11.Name = "label11";
+            label11.Size = new Size(106, 15);
+            label11.TabIndex = 21;
+            label11.Text = "Global Namespace";
             // 
             // textBox1
             // 
@@ -949,21 +971,48 @@
             edtLog.TabIndex = 0;
             edtLog.Text = "";
             // 
-            // edtGlobalNamespace
+            // tabPlusFlags
             // 
-            edtGlobalNamespace.Location = new Point(166, 59);
-            edtGlobalNamespace.Name = "edtGlobalNamespace";
-            edtGlobalNamespace.Size = new Size(460, 23);
-            edtGlobalNamespace.TabIndex = 22;
+            tabPlusFlags.Controls.Add(chUseSpecified);
+            tabPlusFlags.Controls.Add(chUseBackingField);
+            tabPlusFlags.Controls.Add(chNormalNullables);
+            tabPlusFlags.Location = new Point(4, 24);
+            tabPlusFlags.Name = "tabPlusFlags";
+            tabPlusFlags.Padding = new Padding(3);
+            tabPlusFlags.Size = new Size(1000, 588);
+            tabPlusFlags.TabIndex = 4;
+            tabPlusFlags.Text = "Plus Flags";
+            tabPlusFlags.UseVisualStyleBackColor = true;
             // 
-            // label11
+            // chNormalNullables
             // 
-            label11.AutoSize = true;
-            label11.Location = new Point(51, 63);
-            label11.Name = "label11";
-            label11.Size = new Size(106, 15);
-            label11.TabIndex = 21;
-            label11.Text = "Global Namespace";
+            chNormalNullables.AutoSize = true;
+            chNormalNullables.Location = new Point(8, 6);
+            chNormalNullables.Name = "chNormalNullables";
+            chNormalNullables.Size = new Size(559, 19);
+            chNormalNullables.TabIndex = 21;
+            chNormalNullables.Text = "Normal Nullables. When true, the default, emit nullable properties as  type? PropertyName { get; set; }";
+            chNormalNullables.UseVisualStyleBackColor = true;
+            // 
+            // chUseBackingField
+            // 
+            chUseBackingField.AutoSize = true;
+            chUseBackingField.Location = new Point(8, 31);
+            chUseBackingField.Name = "chUseBackingField";
+            chUseBackingField.Size = new Size(607, 19);
+            chUseBackingField.TabIndex = 22;
+            chUseBackingField.Text = "Use Backing Field. When false, the default, emit generic List properties as List<Type> PropertyName { get; set; }";
+            chUseBackingField.UseVisualStyleBackColor = true;
+            // 
+            // chUseSpecified
+            // 
+            chUseSpecified.AutoSize = true;
+            chUseSpecified.Location = new Point(8, 56);
+            chUseSpecified.Name = "chUseSpecified";
+            chUseSpecified.Size = new Size(501, 19);
+            chUseSpecified.TabIndex = 23;
+            chUseSpecified.Text = "Use Specified Property. When false, the default, no PropertyIsSpecified property is emitted.";
+            chUseSpecified.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
@@ -995,6 +1044,8 @@
             Splitter.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)Splitter).EndInit();
             Splitter.ResumeLayout(false);
+            tabPlusFlags.ResumeLayout(false);
+            tabPlusFlags.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -1085,5 +1136,9 @@
         private ToolStripStatusLabel lblProjectPath;
         private TextBox edtGlobalNamespace;
         private Label label11;
+        private TabPage tabPlusFlags;
+        private CheckBox chUseSpecified;
+        private CheckBox chUseBackingField;
+        private CheckBox chNormalNullables;
     }
 }

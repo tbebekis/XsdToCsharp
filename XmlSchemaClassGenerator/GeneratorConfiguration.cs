@@ -1,143 +1,75 @@
-﻿namespace XsdToCsharp
+﻿using System;
+using System.CodeDom;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+namespace XmlSchemaClassGenerator
 {
-
-
-    /// <summary>
-    /// Project configuration
-    /// </summary>
-    internal class ProjectSettings
+    public class GeneratorConfiguration
     {
-        /* construction */
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public ProjectSettings(string FilePath = "") 
-        { 
-            Load(FilePath);
-        }
+        public static Regex IdentifierRegex { get; } = new Regex(@"^@?[_\p{L}\p{Nl}][\p{L}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc}\p{Cf}]*$", RegexOptions.Compiled);
 
-
-        /// <summary>
-        /// Loads this instance from a json file
-        /// </summary>
-        public void Load(string FilePath)
+        public GeneratorConfiguration()
         {
-            if (File.Exists(FilePath))
+            NamespaceProvider = new NamespaceProvider()
             {
-                Json.LoadFromFile(this, FilePath);
-            }
-        }
-        /// <summary>
-        /// Saves this instance to a json file
-        /// </summary>
-        public void Save(string FilePath)
-        {
-            Json.SaveToFile(this, FilePath);
+                GenerateNamespace = key =>
+                {
+                    var xn = key.XmlSchemaNamespace;
+                    var name = string.Join(".",
+                        xn.Split('/').Where(p => p != "schema" && IdentifierRegex.IsMatch(p))
+                            .Select(n => n.ToTitleCase(NamingScheme.PascalCase)));
+                    if (!string.IsNullOrEmpty(NamespacePrefix))
+                    {
+                        name = NamespacePrefix + (string.IsNullOrEmpty(name) ? "" : ("." + name));
+                    }
+                    return name;
+                },
+            };
+
+            NamingScheme = NamingScheme.PascalCase;
+            DataAnnotationMode = DataAnnotationMode.All;
+            GenerateSerializableAttribute = GenerateDesignerCategoryAttribute = true;
+            CollectionType = typeof(Collection<>);
+            MemberVisitor = (member, model) => { };
+            TypeVisitor = (type, model) => { };
+            NamingProvider = new NamingProvider(NamingScheme);
+            Version = VersionProvider.CreateFromAssembly();
+            EnableUpaCheck = true;
+            CommandLineArgumentsProvider = CommandLineArgumentsProvider.CreateFromEnvironment();
         }
 
+        public bool EnumAsString { get; set; }
 
-        /* properties */
         /// <summary>
-        /// Project name for display purposes
+        /// The writer to be used to generate the code files
         /// </summary>
-        public string Name { get; set; }
- 
+        public OutputWriter OutputWriter { get; set; }
+
         /// <summary>
-        /// The list of source XSD files
+        /// A provider to obtain the name and version of the tool
         /// </summary>
-        public List<string> Files { get; set; } = new List<string>();
+        public VersionProvider Version { get; set; }
+
         /// <summary>
-        /// All generated classes go under this namespace. Otherwise define Xsd to C# namespace mapping. The Global Namespace takes precedence over the namespace mapping.
+        /// The prefix which gets added to all automatically generated namespaces
         /// </summary>
-        public string GlobalNamespace { get; set; }
+        public string NamespacePrefix { get; set; }
+
         /// <summary>
-        /// The mapping between XSD and C# namespaces
+        /// The caching namespace provider
         /// </summary>
-        public List<NsPair> Namespaces { get; set; } = new List<NsPair>();
- 
-        /* XmlSchemaClassGenerator properties */
+        public NamespaceProvider NamespaceProvider { get; set; }
         /// <summary>
         /// The folder where the output files get stored
         /// </summary>
         public string OutputFolder { get; set; }
         /// <summary>
-        /// The prefix which gets added to all automatically generated namespaces
+        /// Provides a way to redirect the log output
         /// </summary>
-        public string NamespacePrefix { get; set; }
-        /// <summary>
-        /// Prefix for private members
-        /// </summary>
-        public string PrivateMemberPrefix { get; set; } = "_";
-        /// <summary>
-        /// The name of the property that will contain the text value of an XML element
-        /// </summary>
-        public string TextValuePropertyName { get; set; } = "Value";
-
-        /// <summary>
-        /// The default collection type to use
-        /// </summary>
-        public string CollectionType { get; set; }
-        /// <summary>
-        /// Default data type for numeric fields
-        /// </summary>
-        public string IntegerDataType { get; set; }
-        /// <summary>
-        /// The default collection type implementation to use
-        /// </summary>
-        /// <remarks>
-        /// This is only useful when CollectionType is an interface type.
-        /// </remarks>
-        public string CollectionImplementationType { get; set; }
-
-        /// <summary>
-        /// Determines the kind of collection accessor modifiers to emit and controls baking collection fields initialization
-        /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))]
-        public CollectionSettersMode CollectionSettersMode { get; set; }
-        /// <summary>
-        /// How are the names of the created properties changed?
-        /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))]
-        public NamingScheme NamingScheme { get; set; }
-        /// <summary>
-        /// Determines the kind of annotations to emit
-        /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))]
-        public DataAnnotationMode DataAnnotationMode { get; set; }
-
-        /* NOTE: NOT USED BY THIS APP */
-        /// <summary>
-        /// Generator Code reference options
-        /// </summary>
-        //[JsonConverter(typeof(StringEnumConverter))]
-        [Newtonsoft.Json.JsonIgnore]
-        public CodeTypeReferenceFlags CodeTypeReferenceOptions { get; set; }
-
-        /* flags added to XmlSchemaClassGenerator by this project */
-        /// <summary>
-        /// When true, the default, emit nullable properties as 
-        /// <code>type? PropertyName { get; set; }</code>
-        /// </summary>
-        public bool NormalNullables { get; set; } = true;
-        /// <summary>
-        /// When false, the default, emit generic List properties as
-        /// <code>List&lt;Type&gt; PropertyName { get; set; }</code>
-        /// </summary
-        public bool UseBackingField { get; set; }
-        /// <summary>
-        /// When false, the default, not PropertyIsSpecified property is emitted.
-        /// </summary
-        public bool UseSpecified { get; set; }
-
-        /* flags */
-        /// <summary>
-        /// Emit the "Order" attribute value for XmlElementAttribute to ensure the correct order of the serialized XML elements.
-        /// </summary>
-        public bool EmitOrder { get; set; }
-        /// <summary>
-        /// Use string instead of enum for enumeration
-        /// </summary>
-        public bool EnumAsString { get; set; }
+        public Action<string> Log { get; set; }
         /// <summary>
         /// Enable data binding with INotifyPropertyChanged
         /// </summary>
@@ -150,6 +82,32 @@
         /// Generate attributes for nullable references to avoid compiler-warnings in .NET Core and Standard with nullable-checks.
         /// </summary>
         public bool EnableNullableReferenceAttributes { get; set; }
+
+        private NamingScheme namingScheme;
+
+        /// <summary>
+        /// How are the names of the created properties changed?
+        /// </summary>
+        public NamingScheme NamingScheme
+        {
+            get => namingScheme;
+
+            set
+            {
+                namingScheme = value;
+                NamingProvider = new NamingProvider(namingScheme);
+            }
+        }
+
+        /// <summary>
+        /// Emit the "Order" attribute value for XmlElementAttribute to ensure the correct order
+        /// of the serialized XML elements.
+        /// </summary>
+        public bool EmitOrder { get; set; }
+        /// <summary>
+        /// Determines the kind of annotations to emit
+        /// </summary>
+        public DataAnnotationMode DataAnnotationMode { get; set; }
         /// <summary>
         /// Generate Nullable members for optional elements?
         /// </summary>
@@ -170,6 +128,21 @@
         /// Generate the DesignerCategoryAttribute?
         /// </summary>
         public bool GenerateDesignerCategoryAttribute { get; set; }
+        /// <summary>
+        /// The default collection type to use
+        /// </summary>
+        public Type CollectionType { get; set; }
+        /// <summary>
+        /// The default collection type implementation to use
+        /// </summary>
+        /// <remarks>
+        /// This is only useful when CollectionType is an interface type.
+        /// </remarks>
+        public Type CollectionImplementationType { get; set; }
+        /// <summary>
+        /// Default data type for numeric fields
+        /// </summary>
+        public Type IntegerDataType { get; set; }
         /// <summary>
         /// Use <see cref="IntegerDataType"/> only if no better type can be inferred
         /// </summary>
@@ -195,18 +168,69 @@
         /// </summary>
         public bool AssemblyVisible { get; set; }
         /// <summary>
-        /// Do not include comments from xsd
+        /// Generator Code reference options
         /// </summary>
+        public CodeTypeReferenceOptions CodeTypeReferenceOptions { get; set; }
+        /// <summary>
+        /// Determines the kind of collection accessor modifiers to emit and controls baking collection fields initialization
+        /// </summary>
+        public CollectionSettersMode CollectionSettersMode { get; set; }
+
+        /// <summary>
+        /// The name of the property that will contain the text value of an XML element
+        /// </summary>
+        public string TextValuePropertyName { get; set; } = "Value";
+
+        /// <summary>
+        /// Provides a fast and safe way to write to the Log
+        /// </summary>
+        /// <param name="messageCreator"></param>
+        /// <remarks>
+        /// Does nothing when the Log isn't set.
+        /// </remarks>
+        public void WriteLog(Func<string> messageCreator)
+        {
+            Log?.Invoke(messageCreator());
+        }
+        /// <summary>
+        /// Write the message to the log.
+        /// </summary>
+        /// <param name="message"></param>
+        public void WriteLog(string message)
+        {
+            Log?.Invoke(message);
+        }
+
+        /// <summary>
+        /// Optional delegate that is called for each generated type member
+        /// </summary>
+        public Action<CodeTypeMember, PropertyModel> MemberVisitor { get; set; }
+
+        /// <summary>
+        /// Optional delegate that is called for each generated type (class, interface, enum)
+        /// </summary>
+        public Action<CodeTypeDeclaration, TypeModel> TypeVisitor { get; set; }
+
+        /// <summary>
+        /// Provides options to customize Elementnamens with own logic
+        /// </summary>
+        public INamingProvider NamingProvider { get; set; }
+
         public bool DisableComments { get; set; }
+
         /// <summary>
         /// If True then do not force generator to emit IsNullable=true in XmlElement annotation
         /// for nillable elements when element is nullable (minOccurs &lt; 1 or parent element is choice)
         /// </summary>
         public bool DoNotForceIsNullable { get; set; }
+
+        public string PrivateMemberPrefix { get; set; } = "_";
+
         /// <summary>
         /// Check for Unique Particle Attribution (UPA) violations
         /// </summary>
         public bool EnableUpaCheck { get; set; }
+
         /// <summary>
         /// When a ComplexType has a member that is used as a "collection" around another ComplexType
         /// the serializer will output the intermediate ComplexType.
@@ -252,26 +276,37 @@
         /// </code>
         /// </summary>
         public bool GenerateComplexTypesForCollections { get; set; } = true;
+
         /// <summary>
         /// Separates each class into an individual file
         /// </summary>
         public bool SeparateClasses { get; set; } = false;
+
         /// <summary>
         /// Generates a separate property for each element of a substitution group
         /// </summary>
         public bool SeparateSubstitutes { get; set; } = false;
+
         /// <summary>
         /// Generates type names without namespace qualifiers for namespaces in using list
         /// </summary>
         public bool CompactTypeNames { get; set; }
+
+        /// <summary>
+        /// The language identifiers comments will be generated for, e.g. "en", "de-DE".
+        /// </summary>
+        public HashSet<string> CommentLanguages { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         /// <summary>
         /// Create unique type names across all namespaces. See https://github.com/mganss/XmlSchemaClassGenerator/issues/240
         /// </summary>
-        public bool UniqueTypeNamesAcrossNamespaces { get; set; } = false;
+        public bool UniqueTypeNameAcrossNamespaces { get; set; } = false;
+
         /// <summary>
         /// Adds version information to <see cref="System.CodeDom.Compiler.GeneratedCodeAttribute"/>. Default is true.
         /// </summary>
         public bool CreateGeneratedCodeAttributeVersion { get; set; } = true;
+
         /// <summary>
         /// Generate code that works with .NET Core but might be incompatible with .NET Framework. Default is false.
         /// Specific differences:
@@ -280,25 +315,50 @@
         /// </list>
         /// </summary>
         public bool NetCoreSpecificCode { get; set; }
+
         /// <summary>
         /// Adds a comment with the exact command line arguments that were used to generate the
         /// source code using the <see cref="CommandLineArgumentsProvider"/>. Default is false.
         /// </summary>
         public bool GenerateCommandLineArgumentsComment { get; set; }
+
+        /// <summary>
+        /// A provider to obtain the command line arguments of the tool.
+        /// </summary>
+        public CommandLineArgumentsProvider CommandLineArgumentsProvider { get; set; }
+
         /// <summary>
         /// Enables use of <see cref="System.Xml.Serialization.XmlArrayItemAttribute"/>
         /// for sequences with single elements. Default is true.
         /// </summary>
         public bool UseArrayItemAttribute { get; set; } = true;
+
         /// <summary>
         /// Tries to determine a common specific type for union member types, e.g. if a union has member types that are all integers
         /// a numeric C# type is generated. If this is disabled, a union's type will default to string. Default is false.
         /// </summary>
         public bool MapUnionToWidestCommonType { get; set; }
+
         /// <summary>
         /// Separates namespace hierarchy by folder. Default is false.
         /// </summary>
         public bool SeparateNamespaceHierarchy { get; set; } = false;
 
+
+        /* added by tbebekis */
+        /// <summary>
+        /// When true, the default, emit nullable properties as 
+        /// <para><c> type? PropertyName { get; set; }</c></para>
+        /// </summary>
+        public bool NormalNullables { get; set; } = true;
+        /// <summary>
+        /// When false, the default, emit generic List properties as
+        /// <para><c> List&lt;Type&gt; PropertyName { get; set; }</c></para>
+        /// </summary
+        public bool UseBackingField { get; set; }
+        /// <summary>
+        /// When false, the default, not PropertyIsSpecified property is emitted.
+        /// </summary
+        public bool UseSpecified { get; set; }
     }
 }
